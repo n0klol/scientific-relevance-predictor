@@ -1,6 +1,10 @@
+from tkinter import Tk
+from tkinter.filedialog import askopenfilename
 import pickle
 import pandas as pd
 import os
+
+DATABASE_PATH = "database.tsv"
 
 MODELS_DIR = "models"
 
@@ -25,6 +29,41 @@ def load_dataset(file_path):
     except Exception as e:
         print(f"Error loading dataset: {e}")
         return None
+
+def get_dataset():
+    print("\n=== Dataset Options ===")
+    print("1. Use existing test dataset from database")
+    print("2. Import new test dataset into database")
+
+    choice = input("Choose option (1 or 2): ").strip()
+
+    if choice == "1":
+        if os.path.exists(DATABASE_PATH):
+            print(f"\nLoading dataset from {DATABASE_PATH}...")
+            return load_dataset(DATABASE_PATH)
+        else:
+            print("\nNo database file found. You must import a dataset first.")
+            return get_dataset()
+
+    elif choice == "2":
+        Tk().withdraw()
+        file_path = askopenfilename(
+            title="Select Test Dataset",
+            filetypes=[("TSV files", "*.tsv"), ("All files", "*.*")]
+        )
+        if not file_path:
+            print("No file selected. Exiting...")
+            return None
+        else:
+            df = load_dataset(file_path)
+            if df is not None:
+                # Save a copy to simulate local database
+                df.to_csv(DATABASE_PATH, sep="\t", index=False)
+                print(f"\nDataset imported and saved to {DATABASE_PATH}")
+            return df
+    else:
+        print("Invalid choice. Try again.")
+        return get_dataset()
 
 
 def choose_row(df):
@@ -71,40 +110,15 @@ def predict(text, model):
     print(f"\nPrediction result: {label}\n")
 
 
-# ------------------------------
-# Main Program
-# ------------------------------
 def main():
     print("=== Scientific Relevance Prediction System ===")
 
-    # Load dataset
-    # file_path = input("Enter path to test dataset (TSV file): ").strip()
-    from tkinter import Tk
-    from tkinter.filedialog import askopenfilename
+    df = get_dataset()
 
-    # Open file explorer
-    Tk().withdraw()  # hides the empty Tk window
-    file_path = askopenfilename(
-        title="Select Test Dataset",
-        filetypes=[("TSV files", "*.tsv"), ("All files", "*.*")]
-    )
-
-    if not file_path:
-        print("No file selected. Exiting...")
-        return
-
-
-    df = load_dataset(file_path)
-    if df is None:
-        return
-
-    # Select row
     text = choose_row(df)
 
-    # Select model
     model, model_name = choose_model()
 
-    # Run prediction
     predict(text, model)
 
 
