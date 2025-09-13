@@ -1,7 +1,6 @@
 import pickle
 import pandas as pd
 import os
-import sklearn
 
 MODELS_DIR = "models"
 
@@ -11,8 +10,6 @@ AVAILABLE_MODELS = {
     "3": ("ComplementNB", os.path.join(MODELS_DIR, "complement_nb.pkl")),
     "4": ("RidgeClassifier", os.path.join(MODELS_DIR, "ridge_classifier.pkl")),
 }
-
-VECTORIZER_PATH = os.path.join(MODELS_DIR, "tfidf_vectorizer.pkl")
 
 def load_pickle(path):
     with open(path, "rb") as f:
@@ -61,9 +58,8 @@ def choose_model():
             print("Invalid choice, try again.")
 
 
-def predict(text, model, vectorizer):
-    X = vectorizer.transform([text])
-    prediction = model.predict(X)[0]
+def predict(text, model):
+    prediction = model.predict(text)[0]
 
     if prediction == 1:
         label = "SCIENTIFICALLY RELEVANT"
@@ -102,9 +98,6 @@ def main():
     if df is None:
         return
 
-    # Load vectorizer
-    vectorizer = load_pickle(VECTORIZER_PATH)
-
     # Select row
     text = choose_row(df)
 
@@ -112,7 +105,7 @@ def main():
     model, model_name = choose_model()
 
     # Run prediction
-    predict(text, model, vectorizer)
+    predict(text, model)
 
 
 if __name__ == "__main__":
