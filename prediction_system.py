@@ -98,7 +98,7 @@ def choose_model():
 
 
 def predict(text, model):
-    prediction = model.predict(text)[0]
+    prediction = model.predict([text])[0]
 
     if prediction == 1:
         label = "SCIENTIFICALLY RELEVANT"
