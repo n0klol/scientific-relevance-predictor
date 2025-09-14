@@ -2,11 +2,17 @@ from tkinter import Tk
 from tkinter.filedialog import askopenfilename
 import pickle
 import pandas as pd
-import os
+import sys, os
+
+def resource_path(relative_path):
+    if hasattr(sys, "_MEIPASS"):  # running in a bundle
+        return os.path.join(sys._MEIPASS, relative_path)
+    return os.path.join(os.path.abspath("."), relative_path)
+
 
 DATABASE_PATH = "database.tsv"
 
-MODELS_DIR = "models"
+MODELS_DIR = resource_path("models")
 
 AVAILABLE_MODELS = {
     "1": ("LinearSVC", os.path.join(MODELS_DIR, "linear_svc.pkl")),
@@ -66,20 +72,47 @@ def get_dataset():
         return get_dataset()
 
 
-def choose_row(df):
+def choose_row(df, page_size=5, preview_len=60):
     print(f"\nDataset loaded with {len(df)} rows.")
 
+    total = len(df)
+    page = 0
+
     while True:
-        try:
-            idx = int(input("Enter the row index you want to use for prediction: "))
-            if 0 <= idx < len(df):
-                text = df.iloc[idx]["text"]
-                print(f"\nRow {idx} selected:\n{text}\n")
-                return text
+        start = page * page_size
+        end = min(start + page_size, total)
+
+        print(f"\n=== Choose a row from the dataset ===")
+        print(f"Page {page+1} of {(total + page_size - 1)//page_size}\n")
+
+        for i in range(start, end):
+            preview = df.iloc[i]["text"][:preview_len].replace("\n", " ")
+            print(f"[{i}] {preview}...")
+
+        print("\nn = next page, p = previous page, q = quit")
+        choice = input("Enter row number: ").strip()
+
+        if choice == "n":
+            if end < total:
+                page += 1
             else:
-                print("Invalid index, try again.")
-        except ValueError:
-            print("Please enter a valid integer.")
+                print("Already at last page.")
+        elif choice == "p":
+            if page > 0:
+                page -= 1
+            else:
+                print("Already at first page.")
+        elif choice == "q":
+            return None
+        else:
+            try:
+                idx = int(choice)
+                if 0 <= idx < total:
+                    return df.iloc[idx]["text"]
+                else:
+                    print("Invalid index.")
+            except ValueError:
+                print("Invalid input.")
 
 
 def choose_model():
