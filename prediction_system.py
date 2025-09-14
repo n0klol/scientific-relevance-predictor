@@ -146,13 +146,24 @@ def predict(text, model):
 def main():
     print("=== Scientific Relevance Prediction System ===")
 
-    df = get_dataset()
+    while True:
+        df = get_dataset()
+        if df is None:
+            return
 
-    text = choose_row(df)
+        text = choose_row(df)
+        if text is None:
+            print("Exiting row selection...")
+            continue
 
-    model, model_name = choose_model()
+        model, model_name = choose_model()
 
-    predict(text, model)
+        predict(text, model)
+
+        retry_input = input("\nDo you want to make another prediction? (y/n): ").strip().lower()
+        if retry_input != "y":
+            print("Goodbye!")
+            break
 
 
 if __name__ == "__main__":
